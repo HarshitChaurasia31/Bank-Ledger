@@ -50,7 +50,7 @@ async function getAccountBalance(req, res) {
         })
     }
 
-    const balance = await account.getBalance()
+    let balance = await account.getBalance()
     if (balance < 0) {
         balance = 0;
     }

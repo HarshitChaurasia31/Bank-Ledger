@@ -1,7 +1,7 @@
-const userModel=require('../models/user.model')
-const jwt =require('jsonwebtoken')
-const emailService=require('../services/email.service')
-const tokenBlacklistModel=require('../models/blacklist.model')
+const userModel = require('../models/user.model')
+const jwt = require('jsonwebtoken')
+const emailService = require('../services/email.service')
+const tokenBlacklistModel = require('../models/blacklist.model')
 /**
  * - user register controller
  * - POST /api/auth/register
@@ -31,7 +31,12 @@ async function userRegisterController(req, res) {
             { expiresIn: "3d" }
         )
 
-        res.cookie("token", token) // ✅ fixed
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge: 3 * 24 * 60 * 60 * 1000
+        })
 
         res.status(201).json({
             message: "User Registration Done",
@@ -42,7 +47,7 @@ async function userRegisterController(req, res) {
             },
             token
         })
-        await emailService.sendRegistrationEmail(user.email,user.name)
+        await emailService.sendRegistrationEmail(user.email, user.name)
     } catch (err) {
         console.error(err)
         res.status(500).json({
@@ -56,64 +61,64 @@ async function userRegisterController(req, res) {
  * - POST /api/auth/login
  */
 
-async function userLoginController(req,res){
+async function userLoginController(req, res) {
 
-    const {email,password}=req.body
+    const { email, password } = req.body
 
-    const user=await userModel.findOne({
+    const user = await userModel.findOne({
         email
     }).select("+password")
 
-    if(!user){
+    if (!user) {
         return res.status(401).json({
-            message:"Email/Password is invalid",
+            message: "Email/Password is invalid",
         })
     }
 
-    const isValidPassword=await user.comparePassword(password)
+    const isValidPassword = await user.comparePassword(password)
 
-    if(!isValidPassword){
+    if (!isValidPassword) {
         return res.status(401).json({
-            message:"Password is invalid",
+            message: "Password is invalid",
         })
     }
     const token = jwt.sign(
-            { userId: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: "3d" }
-        )
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "3d" }
+    )
 
-        res.cookie("token", token) // ✅ fixed
+    res.cookie("token", token) // ✅ fixed
 
-        res.status(200).json({
-            message: "User Loggedin",
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email
-            },
-            token
-        })
+    res.status(200).json({
+        message: "User Loggedin",
+        user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email
+        },
+        token
+    })
 
 
 }
 
-async function userLogoutController(req,res){
-    const token=req.cookies.token || req.headers.authorization?.split(" ")[1]
+async function userLogoutController(req, res) {
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1]
 
-    if(!token){
+    if (!token) {
         return res.status(200).json({
-            message:"User Logged Out Successfully"
+            message: "User Logged Out Successfully"
         })
     }
-    
+
     await tokenBlacklistModel.create({
-        token:token
+        token: token
     })
     res.clearCookie("token")
     return res.status(200).json({
-        message:"User Logged Out Successfully"
+        message: "User Logged Out Successfully"
     })
 }
 
-module.exports={userRegisterController,userLoginController,userLogoutController}
+module.exports = { userRegisterController, userLoginController, userLogoutController }
