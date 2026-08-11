@@ -1,16 +1,16 @@
 const accountModel = require('../models/account.model')
 const intializeFund = require('../services/transaction.service')
-const mongoose=require('mongoose')
+const mongoose = require('mongoose')
 async function createAccountController(req, res) {
-    const session=await mongoose.startSession()
+    const session = await mongoose.startSession()
     try {
         session.startTransaction()
         const user = req.user
         const [account] = await accountModel.create([{
             user: user._id
-        }],{session})
+        }], { session })
 
-        await intializeFund.initializeFund(account._id,session)
+        await intializeFund.initializeFund(account._id, session)
         await session.commitTransaction()
         return res.status(201).json({
             account
@@ -20,8 +20,8 @@ async function createAccountController(req, res) {
         return res.status(500).json({
             message: err.message
         })
-    }finally{
-        session.endSession()
+    } finally {
+        await session.endSession()
     }
 
 }
@@ -51,12 +51,9 @@ async function getAccountBalance(req, res) {
     }
 
     let balance = await account.getBalance()
-    if (balance < 0) {
-        balance = 0;
-    }
-    res.status(200).json({
+    return res.status(200).json({
         accountId: account._id,
-        balance: balance
+        balance
     })
 }
 module.exports = { createAccountController, getUserAccountController, getAccountBalance }

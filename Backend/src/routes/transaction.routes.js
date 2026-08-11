@@ -2,12 +2,13 @@ const express=require('express')
 const authMiddleware=require('../middleware/auth.middleware')
 const transactionController=require('../controller/transaction.controller')
 const router=express.Router()
+const {transactionLimiter}=require('../middleware/ratelimit.middleware')
 
 /**
  * - POST /api/transactions
  * - Create a transaction
  */
-router.post('/',authMiddleware.authMiddleware,transactionController.createTransaction)
+router.post('/',authMiddleware.authMiddleware,transactionLimiter,transactionController.createTransaction)
 
 /**
  * - POST /api/transactions/system/intial-funds

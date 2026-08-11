@@ -70,13 +70,54 @@ async function createTransaction(req, res) {
     }
 
 
-    let [transaction] = await transactionModel.create([{
-        fromAccount,
-        toAccount,
-        amount,
-        idempotencyKey,
-        status: "PENDING"
-    }]);
+    let transaction;
+
+    try {
+        [transaction] = await transactionModel.create([{
+            fromAccount,
+            toAccount,
+            amount,
+            idempotencyKey,
+            status: "PENDING"
+        }]);
+    } catch (err) {
+        if (err.code === 11000) {
+            const existingTransaction =
+                await transactionModel.findOne({ idempotencyKey });
+
+            if (!existingTransaction) {
+                throw err;
+            }
+
+            if (existingTransaction.status === "COMPLETED") {
+                return res.status(200).json({
+                    message: "Transaction already processed",
+                    transaction: existingTransaction
+                });
+            }
+
+            if (existingTransaction.status === "PENDING") {
+                return res.status(200).json({
+                    message: "Transaction is being processed",
+                    transaction: existingTransaction
+                });
+            }
+
+            if (existingTransaction.status === "FAILED") {
+                return res.status(409).json({
+                    message: "Previous transaction attempt failed. Use a new idempotency key to retry.",
+                    transaction: existingTransaction
+                });
+            }
+
+            if (existingTransaction.status === "REVERSED") {
+                return res.status(409).json({
+                    message: "Previous transaction was reversed. Use a new idempotency key to retry.",
+                    transaction: existingTransaction
+                });
+            }
+        }
+    }
     const session = await mongoose.startSession();
     try {
         session.startTransaction();
@@ -155,9 +196,9 @@ async function createIntialFundTransaction(req, res) {
         return res.status(400).json({ message: "Invalid toAccount" })
     }
 
-    const fromUserAccount = await accountModel.findOne({
-        user: req.user._id
-    })
+    const fromUserAccount = await accountModel.findById(
+        process.env.SYSTEM_ACCOUNT_ID
+    )
     if (!fromUserAccount) {
         return res.status(400).json({
             message: "System user account not found"
