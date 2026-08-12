@@ -18,10 +18,14 @@ router.post('/',authMiddleware.authMiddleware,accountController.createAccountCon
  */
 router.get('/',authMiddleware.authMiddleware,accountController.getUserAccountController)
 
-
+/**
+ * - GET api/accounts/search?q=<accountId>&limit=5
+ */
+router.get('/search',authMiddleware.authMiddleware,accountController.searchAccounts)
 
 /**
  * - GET api/accounts/balance/:accountId
  */
 router.get('/balance/:accountId',authMiddleware.authMiddleware,accountController.getAccountBalance)
+
 module.exports=router

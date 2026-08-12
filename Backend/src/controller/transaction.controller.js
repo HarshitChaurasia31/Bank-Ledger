@@ -37,6 +37,14 @@ async function createTransaction(req, res) {
             message: "Cannot transfer to the same account"
         })
     }
+    if (
+        toUserAccount._id.toString() ===
+        process.env.SYSTEM_ACCOUNT_ID
+    ) {
+        return res.status(403).json({
+            message: "Transfers to the system account are not allowed"
+        })
+    }
     const isTransactionExist = await transactionModel.findOne({ idempotencyKey: idempotencyKey })
 
     if (isTransactionExist) {
@@ -266,17 +274,30 @@ async function createIntialFundTransaction(req, res) {
 }
 
 async function historyTransaction(req, res) {
-    const account = await accountModel.findOne({
+    const accounts = await accountModel.find({
         user: req.user._id
-    })
+    });
+
+    if (accounts.length === 0) {
+        return res.status(200).json({
+            transactions: []
+        });
+    }
+
+    const accountIds = accounts.map(account => account._id);
+
     const transactions = await transactionModel.find({
         $or: [
-            { fromAccount: account._id },
-            { toAccount: account._id }
+            { fromAccount: { $in: accountIds } },
+            { toAccount: { $in: accountIds } }
         ]
-    }).populate("fromAccount").populate('toAccount').sort({ createdAt: -1 })
+    })
+        .populate("fromAccount")
+        .populate("toAccount")
+        .sort({ createdAt: -1 });
+
     return res.status(200).json({
         transactions
-    })
+    });
 }
 module.exports = { createTransaction, createIntialFundTransaction, historyTransaction }

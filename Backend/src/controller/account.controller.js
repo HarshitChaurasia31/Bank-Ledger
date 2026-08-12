@@ -56,4 +56,69 @@ async function getAccountBalance(req, res) {
         balance
     })
 }
-module.exports = { createAccountController, getUserAccountController, getAccountBalance }
+
+async function searchAccounts(req, res) {
+    try {
+        const { q = "", limit = 5 } = req.query;
+        const search = q.trim()
+        const systemAccountId = new mongoose.Types.ObjectId(
+            process.env.SYSTEM_ACCOUNT_ID
+        );
+        const safeLimit = Math.min(Math.max(parseInt(limit) || 5, 1), 5);
+        if (
+            search &&
+            !/^[0-9a-fA-F]{1,24}$/.test(search)
+        ) {
+            return res.status(400).json({
+                message: "Invalid account ID search"
+            });
+        }
+        const pipeline = [{
+            $match: {
+                status: "Active",
+                _id: {
+                    $ne: systemAccountId
+                }
+            }
+        },
+        {
+            $addFields: {
+                accountIdString: {
+                    $toString: "$_id"
+                }
+            }
+        }
+        ]
+        if (search) {
+            pipeline.push({
+                $match: {
+                    accountIdString: {
+                        $regex: `^${q.trim()}`,
+                        $options: "i"
+                    }
+                }
+            })
+        }
+        pipeline.push({
+            $project: {
+                _id: 1,
+                currency: 1,
+                status: 1
+            }
+        }, {
+            $limit: safeLimit
+        })
+        const accounts = await accountModel.aggregate(pipeline);
+        return res.status(200).json({
+            accounts
+        })
+    } catch (err) {
+        console.error("SEARCH ACCOUNTS ERROR:", err);
+
+        return res.status(500).json({
+            message: "Failed to search accounts",
+            error: err.message
+        });
+    }
+}
+module.exports = { createAccountController, getUserAccountController, getAccountBalance, searchAccounts }
