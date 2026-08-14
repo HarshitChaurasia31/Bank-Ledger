@@ -28,13 +28,13 @@ export function CreateAccountModal({ isOpen, onClose }) {
         {/* Header */}
         <div className="modal-header">
           <div className="modal-title">
-            <Landmark size={20} style={{ color: 'var(--primary)' }} />
-            <span>Open New Bank Account</span>
+            <Landmark size={20} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+            <span style={{ fontSize: 'clamp(15px, 3.5vw, 18px)' }}>Open New Bank Account</span>
           </div>
           <button
             onClick={onClose}
             className="btn btn-icon btn-sm btn-outline"
-            style={{ border: 'none' }}
+            style={{ border: 'none', width: '32px', height: '32px', minHeight: '32px' }}
           >
             <X size={18} />
           </button>
@@ -47,29 +47,29 @@ export function CreateAccountModal({ isOpen, onClose }) {
           <div
             style={{
               textAlign: 'center',
-              padding: '16px 0 24px',
+              padding: '12px 0 20px',
             }}
           >
             <div
               style={{
-                width: '64px',
-                height: '64px',
+                width: '56px',
+                height: '56px',
                 borderRadius: 'var(--radius-lg)',
                 background: 'rgba(16, 185, 129, 0.1)',
                 border: '1px solid rgba(16, 185, 129, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 16px',
+                margin: '0 auto 14px',
               }}
             >
-              <ShieldCheck size={32} style={{ color: 'var(--primary)' }} />
+              <ShieldCheck size={28} style={{ color: 'var(--primary)' }} />
             </div>
 
-            <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>
+            <h3 style={{ fontSize: 'clamp(18px, 4vw, 20px)', marginBottom: '8px' }}>
               Create an Active Ledger Account
             </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.5 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.5 }}>
               Your new account will be provisioned instantly with currency <strong>INR</strong> and initialized with ₹10,000 from the bank system reserve.
             </p>
           </div>
@@ -79,27 +79,27 @@ export function CreateAccountModal({ isOpen, onClose }) {
               background: 'var(--bg-input)',
               border: '1px solid var(--border-subtle)',
               borderRadius: 'var(--radius-md)',
-              padding: '16px',
+              padding: '14px',
               display: 'flex',
               flexDirection: 'column',
               gap: '10px',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', gap: '8px' }}>
               <span style={{ color: 'var(--text-muted)' }}>Account Type:</span>
-              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Standard Current Account</span>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right' }}>Standard Current</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', gap: '8px' }}>
               <span style={{ color: 'var(--text-muted)' }}>Base Currency:</span>
               <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>INR (₹)</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', gap: '8px' }}>
               <span style={{ color: 'var(--text-muted)' }}>Account Initialization:</span>
               <span style={{ fontWeight: 600, color: '#34d399' }}>₹10,000.00</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', gap: '8px' }}>
               <span style={{ color: 'var(--text-muted)' }}>Accounting Protocol:</span>
-              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Double-Entry Ledger</span>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right' }}>Double-Entry Ledger</span>
             </div>
           </div>
         </div>

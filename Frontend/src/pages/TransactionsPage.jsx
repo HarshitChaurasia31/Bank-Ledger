@@ -21,49 +21,49 @@ export function TransactionsPage() {
   const totalCompleted = transactions.filter((t) => t.status === 'COMPLETED').length;
 
   return (
-    <div className="container" style={{ paddingBottom: '60px', paddingTop: '32px' }}>
+    <div className="container" style={{ paddingBottom: '60px', paddingTop: '24px' }}>
       {/* Page Header */}
       <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: '20px',
-          marginBottom: '32px',
+          alignItems: 'center',
+          gap: '16px',
+          marginBottom: '24px',
         }}
       >
         <div>
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <ArrowLeftRight size={26} style={{ color: 'var(--primary)' }} />
+            <ArrowLeftRight size={24} style={{ color: 'var(--primary)', flexShrink: 0 }} />
             <span>Double-Entry Ledger History</span>
           </h1>
           <p className="page-subtitle">
             Audited transaction ledger records for account{' '}
-            <span className="font-mono" style={{ color: 'var(--text-primary)' }}>
+            <span className="font-mono" style={{ color: 'var(--text-primary)', wordBreak: 'break-all' }}>
               {activeAccount?._id || 'Primary Account'}
             </span>
           </p>
         </div>
 
         {/* Quick Actions */}
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
           >
-            <RefreshCw size={15} className={isRefreshing ? 'animate-pulse' : ''} />
+            <RefreshCw size={14} className={isRefreshing ? 'animate-pulse' : ''} />
             <span>{isRefreshing ? 'Syncing...' : 'Refresh History'}</span>
           </button>
 
           <button
             onClick={() => setIsTransferOpen(true)}
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
             disabled={!canTransfer}
             title={!canTransfer ? 'Create and initialize an account first.' : 'Transfer Money'}
           >
-            <Send size={15} />
+            <Send size={14} />
             <span>Transfer Money</span>
           </button>
         </div>
@@ -72,10 +72,10 @@ export function TransactionsPage() {
       {/* Summary Chips */}
       <div
         style={{
-          display: 'flex',
-          gap: '16px',
-          marginBottom: '24px',
-          flexWrap: 'wrap',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '12px',
+          marginBottom: '20px',
         }}
       >
         <div
@@ -83,10 +83,10 @@ export function TransactionsPage() {
             background: 'var(--bg-card)',
             border: '1px solid var(--border-card)',
             borderRadius: 'var(--radius-md)',
-            padding: '12px 20px',
+            padding: '12px 16px',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            justifyContent: 'space-between',
           }}
         >
           <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Total Transactions:</span>
@@ -100,10 +100,10 @@ export function TransactionsPage() {
             background: 'var(--bg-card)',
             border: '1px solid var(--border-card)',
             borderRadius: 'var(--radius-md)',
-            padding: '12px 20px',
+            padding: '12px 16px',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            justifyContent: 'space-between',
           }}
         >
           <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Completed Audits:</span>

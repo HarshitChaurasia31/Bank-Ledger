@@ -21,6 +21,7 @@ export function AuthProvider({ children }) {
   /**
    * Bootstrap authentication session on application load.
    * Calls protected GET /api/accounts using HTTP-only cookie.
+   * Populates authenticated user state without local storage.
    */
   const checkSession = useCallback(async () => {
     try {
@@ -28,6 +29,22 @@ export function AuthProvider({ children }) {
       const res = await accountsApi.getAccounts();
       if (res && Array.isArray(res.accounts)) {
         setIsAuthenticated(true);
+        // If user already has accounts, lookup authenticated user name
+        if (res.accounts.length > 0) {
+          try {
+            const firstAccountId = res.accounts[0]._id;
+            const searchRes = await accountsApi.searchAccounts(firstAccountId, 1);
+            const foundAcc = searchRes?.accounts?.find((a) => a._id === firstAccountId);
+            if (foundAcc?.user?.name) {
+              setUser((prev) => ({
+                ...(prev || {}),
+                name: foundAcc.user.name,
+              }));
+            }
+          } catch {
+            // Non-blocking fallback
+          }
+        }
       }
     } catch (err) {
       setIsAuthenticated(false);
@@ -96,6 +113,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     user,
+    setUser,
     isAuthenticated,
     isLoading,
     rateLimitCooldown,

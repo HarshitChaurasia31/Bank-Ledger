@@ -36,6 +36,7 @@ export function AccountCard({ account, balance, isSelected, onSelect }) {
         overflow: 'hidden',
         border: isSelected ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid var(--border-card)',
         transition: 'all var(--transition-normal)',
+        width: '100%',
       }}
     >
       {/* Background Holographic Glow */}
@@ -54,15 +55,15 @@ export function AccountCard({ account, balance, isSelected, onSelect }) {
       />
 
       {/* Card Header: Brand & Status */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Shield size={18} style={{ color: 'var(--primary)' }} />
-          <span style={{ fontFamily: 'var(--font-brand)', fontWeight: 700, fontSize: '14px', letterSpacing: '0.02em' }}>
+          <Shield size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+          <span style={{ fontFamily: 'var(--font-brand)', fontWeight: 700, fontSize: '13px', letterSpacing: '0.02em' }}>
             LENA DENA <span style={{ color: 'var(--primary)' }}>PREMIER</span>
           </span>
         </div>
 
-        <span className={`badge badge-${account.status.toLowerCase()}`}>
+        <span className={`badge badge-${account.status?.toLowerCase()}`} style={{ fontSize: '11px' }}>
           {account.status}
         </span>
       </div>
@@ -71,17 +72,18 @@ export function AccountCard({ account, balance, isSelected, onSelect }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div
           style={{
-            width: '38px',
-            height: '28px',
+            width: '36px',
+            height: '26px',
             background: 'linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%)',
             borderRadius: '5px',
             boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.4), 0 2px 6px rgba(0,0,0,0.3)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            flexShrink: 0,
           }}
         >
-          <Cpu size={18} style={{ color: '#78350f', opacity: 0.85 }} />
+          <Cpu size={16} style={{ color: '#78350f', opacity: 0.85 }} />
         </div>
         <span
           className="font-mono"
@@ -97,7 +99,7 @@ export function AccountCard({ account, balance, isSelected, onSelect }) {
       </div>
 
       {/* Account Number with Copy Action */}
-      <div style={{ marginBottom: '18px' }}>
+      <div style={{ marginBottom: '16px' }}>
         <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
           Account Number (ID)
         </div>
@@ -107,12 +109,23 @@ export function AccountCard({ account, balance, isSelected, onSelect }) {
             alignItems: 'center',
             justifyContent: 'space-between',
             background: 'rgba(0, 0, 0, 0.25)',
-            padding: '8px 12px',
+            padding: '8px 10px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-subtle)',
+            gap: '6px',
           }}
         >
-          <span className="font-mono" style={{ fontSize: '13px', letterSpacing: '0.08em', color: 'var(--text-primary)' }}>
+          <span
+            className="font-mono"
+            style={{
+              fontSize: 'clamp(11px, 2.5vw, 13px)',
+              letterSpacing: '0.05em',
+              color: 'var(--text-primary)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
             {formattedId}
           </span>
           <button
@@ -124,8 +137,10 @@ export function AccountCard({ account, balance, isSelected, onSelect }) {
               border: 'none',
               color: copied ? 'var(--primary)' : 'var(--text-muted)',
               cursor: 'pointer',
-              width: '24px',
-              height: '24px',
+              width: '26px',
+              height: '26px',
+              minHeight: '26px',
+              flexShrink: 0,
             }}
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -141,6 +156,7 @@ export function AccountCard({ account, balance, isSelected, onSelect }) {
           alignItems: 'flex-end',
           paddingTop: '12px',
           borderTop: '1px solid var(--border-subtle)',
+          gap: '8px',
         }}
       >
         <div>
@@ -150,7 +166,7 @@ export function AccountCard({ account, balance, isSelected, onSelect }) {
           <div
             className="font-mono"
             style={{
-              fontSize: '22px',
+              fontSize: 'clamp(18px, 4vw, 22px)',
               fontWeight: 800,
               color: isRevealed ? '#34d399' : 'var(--text-muted)',
               lineHeight: 1.2,
@@ -162,12 +178,12 @@ export function AccountCard({ account, balance, isSelected, onSelect }) {
         </div>
 
         {isSelected ? (
-          <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
             Active Card <Check size={14} />
           </span>
         ) : (
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            Select to Reveal <ArrowUpRight size={14} />
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+            Select <ArrowUpRight size={14} />
           </span>
         )}
       </div>

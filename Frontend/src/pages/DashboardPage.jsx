@@ -66,16 +66,16 @@ export function DashboardPage() {
   });
 
   return (
-    <div className="container" style={{ paddingBottom: '60px', paddingTop: '32px' }}>
+    <div className="container" style={{ paddingBottom: '60px', paddingTop: '24px' }}>
       {/* Page Header */}
       <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: '20px',
-          marginBottom: '32px',
+          alignItems: 'center',
+          gap: '16px',
+          marginBottom: '28px',
         }}
       >
         <div>
@@ -88,39 +88,39 @@ export function DashboardPage() {
         </div>
 
         {/* Top Quick Actions */}
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
             title="Refresh Account Data"
           >
-            <RefreshCw size={15} className={isRefreshing ? 'animate-pulse' : ''} />
+            <RefreshCw size={14} className={isRefreshing ? 'animate-pulse' : ''} />
             <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
           </button>
 
           <button
             onClick={() => setIsCreateAccountOpen(true)}
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
           >
-            <PlusCircle size={15} />
+            <PlusCircle size={14} />
             <span>Open Account</span>
           </button>
 
           <button
             onClick={() => setIsTransferOpen(true)}
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
             disabled={!canTransfer}
             title={!canTransfer ? 'Create and initialize an account first.' : 'Transfer Money'}
           >
-            <Send size={15} />
+            <Send size={14} />
             <span>Transfer Money</span>
           </button>
         </div>
       </div>
 
       {/* Financial Metrics Row */}
-      <div className="grid-3" style={{ marginBottom: '32px' }}>
+      <div className="grid-3" style={{ marginBottom: '28px' }}>
         {/* Main Ledger Balance Card */}
         <div
           className="card card-glowing"
@@ -130,8 +130,8 @@ export function DashboardPage() {
             overflow: 'hidden',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Active Ledger Balance
             </span>
             <span className="badge badge-success">Live Audited</span>
@@ -140,10 +140,11 @@ export function DashboardPage() {
           <div
             className="font-mono"
             style={{
-              fontSize: '36px',
+              fontSize: 'clamp(26px, 6vw, 36px)',
               fontWeight: 800,
               color: '#34d399',
               marginBottom: '6px',
+              lineHeight: 1.1,
             }}
           >
             {isBalanceLoading ? 'Syncing...' : typeof balance === 'number' ? `₹${balance.toLocaleString('en-IN')}` : '₹••••••'}
@@ -156,8 +157,8 @@ export function DashboardPage() {
 
         {/* Total Inflow (Credits) */}
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Total Inflow (Credits)
             </span>
             <div
@@ -170,6 +171,7 @@ export function DashboardPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
               <ArrowDownLeft size={16} />
@@ -179,7 +181,7 @@ export function DashboardPage() {
           <div
             className="font-mono"
             style={{
-              fontSize: '28px',
+              fontSize: 'clamp(22px, 5vw, 28px)',
               fontWeight: 700,
               color: '#34d399',
               marginBottom: '6px',
@@ -195,8 +197,8 @@ export function DashboardPage() {
 
         {/* Total Outflow (Debits) */}
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Total Outflow (Debits)
             </span>
             <div
@@ -209,6 +211,7 @@ export function DashboardPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
               <ArrowUpRight size={16} />
@@ -218,7 +221,7 @@ export function DashboardPage() {
           <div
             className="font-mono"
             style={{
-              fontSize: '28px',
+              fontSize: 'clamp(22px, 5vw, 28px)',
               fontWeight: 700,
               color: '#f87171',
               marginBottom: '6px',
@@ -234,10 +237,10 @@ export function DashboardPage() {
       </div>
 
       {/* Your Bank Accounts Section */}
-      <div style={{ marginBottom: '36px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: 700 }}>Your Bank Accounts</h2>
+            <h2 style={{ fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: 700 }}>Your Bank Accounts</h2>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
               Select an account to view transactions and transfer funds.
             </p>
@@ -256,13 +259,13 @@ export function DashboardPage() {
             className="card"
             style={{
               textAlign: 'center',
-              padding: '48px 24px',
+              padding: '36px 20px',
               background: 'var(--bg-card)',
             }}
           >
-            <CreditCard size={40} style={{ color: 'var(--text-muted)', margin: '0 auto 12px' }} />
+            <CreditCard size={36} style={{ color: 'var(--text-muted)', margin: '0 auto 12px' }} />
             <h3 style={{ fontSize: '18px', marginBottom: '6px' }}>No Active Bank Accounts</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '420px', margin: '0 auto 20px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', maxWidth: '420px', margin: '0 auto 18px' }}>
               Open your first Lena Dena Bank account to receive initial reserve funding of ₹10,000.
             </p>
             <button
@@ -289,10 +292,10 @@ export function DashboardPage() {
       </div>
 
       {/* Recent Activity Table */}
-      <div style={{ marginBottom: '36px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: 700 }}>Recent Ledger Activity</h2>
+            <h2 style={{ fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: 700 }}>Recent Ledger Activity</h2>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
               Live audit trail of immutable debit and credit records.
             </p>
@@ -314,16 +317,16 @@ export function DashboardPage() {
         style={{
           background: 'linear-gradient(135deg, rgba(14, 22, 40, 0.6) 0%, rgba(10, 16, 30, 0.6) 100%)',
           border: '1px solid var(--border-subtle)',
-          padding: '24px',
+          padding: '20px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-          <ShieldCheck size={20} style={{ color: 'var(--primary)' }} />
-          <h3 style={{ fontSize: '16px', fontWeight: 700 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+          <ShieldCheck size={20} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+          <h3 style={{ fontSize: '15px', fontWeight: 700 }}>
             Lena Dena Core Philosophy — Every Rupee Accounted For
           </h3>
         </div>
-        <div className="grid-3" style={{ fontSize: '13px', color: 'var(--text-secondary)', gap: '20px' }}>
+        <div className="grid-3" style={{ fontSize: '13px', color: 'var(--text-secondary)', gap: '16px' }}>
           <div>
             <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
               1. Double-Entry Invariance

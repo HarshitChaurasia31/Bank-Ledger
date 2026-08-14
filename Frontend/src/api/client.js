@@ -173,4 +173,15 @@ export const transactionsApi = {
     request('/transactions/history', {
       method: 'GET',
     }),
+
+  /**
+   * Retry an existing pending transaction using its existing idempotency key
+   * POST /api/transactions/retry
+   * @param {string} idempotencyKey
+   */
+  retryTransaction: (idempotencyKey) =>
+    request('/transactions/retry', {
+      method: 'POST',
+      body: { idempotencyKey },
+    }),
 };

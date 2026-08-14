@@ -66,7 +66,8 @@ export function RegisterPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: '16px',
+        width: '100%',
       }}
     >
       <div
@@ -74,33 +75,33 @@ export function RegisterPage() {
         style={{
           width: '100%',
           maxWidth: '460px',
-          padding: '36px',
+          padding: 'clamp(24px, 6vw, 36px)',
           background: 'rgba(14, 20, 36, 0.85)',
           boxShadow: 'var(--shadow-lg)',
         }}
       >
         {/* Brand Header */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
-              width: '54px',
-              height: '54px',
+              width: '50px',
+              height: '50px',
               borderRadius: 'var(--radius-lg)',
               background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 16px',
+              margin: '0 auto 14px',
               boxShadow: '0 8px 20px rgba(16, 185, 129, 0.35)',
             }}
           >
-            <Landmark size={28} style={{ color: '#fff' }} />
+            <Landmark size={26} style={{ color: '#fff' }} />
           </div>
 
-          <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px' }}>
+          <h2 style={{ fontSize: 'clamp(20px, 4.5vw, 24px)', fontWeight: 800, marginBottom: '6px' }}>
             Open Your <span style={{ color: 'var(--primary)' }}>Account</span>
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
             Join Lena Dena Bank. Every rupee accounted for.
           </p>
         </div>
@@ -196,7 +197,7 @@ export function RegisterPage() {
             marginTop: '24px',
             paddingTop: '20px',
             borderTop: '1px solid var(--border-subtle)',
-            fontSize: '14px',
+            fontSize: '13px',
             color: 'var(--text-secondary)',
           }}
         >

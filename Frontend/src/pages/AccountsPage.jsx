@@ -23,21 +23,21 @@ export function AccountsPage() {
   const activeAccountId = activeAccount?._id;
 
   return (
-    <div className="container" style={{ paddingBottom: '60px', paddingTop: '32px' }}>
+    <div className="container" style={{ paddingBottom: '60px', paddingTop: '24px' }}>
       {/* Header */}
       <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: '20px',
-          marginBottom: '32px',
+          alignItems: 'center',
+          gap: '16px',
+          marginBottom: '28px',
         }}
       >
         <div>
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <CreditCard size={26} style={{ color: 'var(--primary)' }} />
+            <CreditCard size={24} style={{ color: 'var(--primary)', flexShrink: 0 }} />
             <span>Bank Accounts</span>
           </h1>
           <p className="page-subtitle">
@@ -46,21 +46,21 @@ export function AccountsPage() {
         </div>
 
         {/* Quick Actions */}
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
           >
-            <RefreshCw size={15} className={isRefreshing ? 'animate-pulse' : ''} />
+            <RefreshCw size={14} className={isRefreshing ? 'animate-pulse' : ''} />
             <span>{isRefreshing ? 'Syncing...' : 'Refresh Accounts'}</span>
           </button>
 
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
           >
-            <PlusCircle size={15} />
+            <PlusCircle size={14} />
             <span>Open New Account</span>
           </button>
         </div>
@@ -72,13 +72,13 @@ export function AccountsPage() {
           className="card"
           style={{
             textAlign: 'center',
-            padding: '48px 24px',
+            padding: '36px 20px',
             background: 'var(--bg-card)',
           }}
         >
-          <CreditCard size={40} style={{ color: 'var(--text-muted)', margin: '0 auto 12px' }} />
+          <CreditCard size={36} style={{ color: 'var(--text-muted)', margin: '0 auto 12px' }} />
           <h3 style={{ fontSize: '18px', marginBottom: '6px' }}>No Active Bank Accounts</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '420px', margin: '0 auto 20px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', maxWidth: '420px', margin: '0 auto 18px' }}>
             Initialize your first account to receive system reserve funding of ₹10,000.
           </p>
           <button
@@ -90,7 +90,7 @@ export function AccountsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid-3" style={{ marginBottom: '36px' }}>
+        <div className="grid-3" style={{ marginBottom: '28px' }}>
           {accounts.map((acc) => (
             <AccountCard
               key={acc._id}
@@ -107,13 +107,13 @@ export function AccountsPage() {
       <div
         className="card"
         style={{
-          padding: '24px',
+          padding: '20px',
           background: 'rgba(14, 20, 36, 0.6)',
           border: '1px solid var(--border-subtle)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-          <ShieldCheck size={18} style={{ color: 'var(--primary)' }} />
+          <ShieldCheck size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
           <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Account & Reserve Isolation</h3>
         </div>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>

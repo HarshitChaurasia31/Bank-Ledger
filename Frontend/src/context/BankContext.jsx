@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 const BankContext = createContext(null);
 
 export function BankProvider({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, setUser } = useAuth();
   
   const [accounts, setAccounts] = useState([]);
   const [activeAccount, setActiveAccountState] = useState(null);
@@ -110,6 +110,20 @@ export function BankProvider({ children }) {
         // Refresh account list and select new account
         await fetchAccounts(newAccount._id);
         await fetchHistory();
+
+        // If user's name is not yet set in context, resolve from search endpoint
+        if (!user || !user.name) {
+          try {
+            const searchRes = await accountsApi.searchAccounts(newAccount._id, 1);
+            const foundAcc = searchRes?.accounts?.find((a) => a._id === newAccount._id);
+            if (foundAcc?.user?.name && setUser) {
+              setUser((prev) => ({
+                ...(prev || {}),
+                name: foundAcc.user.name,
+              }));
+            }
+          } catch {}
+        }
         
         // Exact subtle success feedback specified in instructions
         showToast('Account created successfully. Your account has been initialized with ₹10,000.', 'success');
@@ -142,6 +156,33 @@ export function BankProvider({ children }) {
       showToast(res?.message || 'Transfer completed successfully', 'success');
       return res;
     } catch (err) {
+      throw err;
+    }
+  };
+
+  /**
+   * Retry an existing pending transaction using its existing idempotency key
+   */
+  const retryTransaction = async (idempotencyKey) => {
+    try {
+      const res = await transactionsApi.retryTransaction(idempotencyKey);
+
+      // Refresh financial data & ledger history on retry
+      if (activeAccount?._id) {
+        await fetchBalance(activeAccount._id);
+      }
+      await fetchHistory();
+
+      showToast(res?.message || 'Transaction completed successfully', 'success');
+      return res;
+    } catch (err) {
+      // Refresh state to capture updated status (e.g. FAILED)
+      if (activeAccount?._id) {
+        await fetchBalance(activeAccount._id);
+      }
+      await fetchHistory();
+
+      showToast(err.message || 'Retry failed', 'danger');
       throw err;
     }
   };
@@ -202,6 +243,7 @@ export function BankProvider({ children }) {
     selectActiveAccount,
     createAccount,
     executeTransfer,
+    retryTransaction,
     fetchBalance,
     fetchAccounts,
     fetchHistory,

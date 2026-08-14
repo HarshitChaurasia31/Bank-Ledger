@@ -60,7 +60,7 @@
   --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -76,6 +76,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  width: 100%;
 }
 
 /* Background Atmosphere */
@@ -109,6 +110,9 @@ body::after {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Typography */
@@ -117,10 +121,12 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .font-mono {
   font-family: var(--font-mono);
+  overflow-wrap: break-word;
 }
 
 .font-brand {
@@ -144,6 +150,8 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: none;
   user-select: none;
   white-space: nowrap;
+  min-height: 40px;
+  touch-action: manipulation;
 }
 
 .btn:disabled {
@@ -206,18 +214,21 @@ h1, h2, h3, h4, h5, h6 {
 .btn-sm {
   padding: 6px 12px;
   font-size: 13px;
+  min-height: 34px;
   border-radius: var(--radius-sm);
 }
 
 .btn-lg {
   padding: 14px 28px;
   font-size: 16px;
+  min-height: 48px;
   border-radius: var(--radius-lg);
 }
 
 .btn-icon {
   width: 38px;
   height: 38px;
+  min-height: 38px;
   padding: 0;
   border-radius: var(--radius-md);
 }
@@ -232,6 +243,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 24px;
   box-shadow: var(--shadow-md);
   transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  max-width: 100%;
 }
 
 .card:hover {
@@ -249,6 +261,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
 }
 
 .form-label {
@@ -258,10 +271,13 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .form-control {
   width: 100%;
+  max-width: 100%;
   padding: 12px 16px;
   background: var(--bg-input);
   border: 1px solid var(--border-card);
@@ -270,6 +286,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-body);
   font-size: 14px;
   outline: none;
+  min-height: 44px;
   transition: all var(--transition-fast);
 }
 
@@ -290,6 +307,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .input-with-icon {
   position: relative;
+  width: 100%;
 }
 
 .input-with-icon .form-control {
@@ -316,6 +334,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .badge-success, .badge-completed, .badge-active {
@@ -334,6 +353,12 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--danger-bg);
   color: #fb7185;
   border: 1px solid var(--danger-border);
+}
+
+.badge-reversed {
+  background: rgba(147, 51, 234, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(147, 51, 234, 0.3);
 }
 
 .badge-frozen {
@@ -369,6 +394,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-md);
   margin-bottom: 20px;
   font-size: 14px;
+  width: 100%;
 }
 
 .alert-danger {
@@ -399,15 +425,16 @@ h1, h2, h3, h4, h5, h6 {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 7, 14, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(4, 7, 14, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
   z-index: 1000;
   animation: fadeIn 0.2s ease-out;
+  overflow-y: auto;
 }
 
 .modal-dialog {
@@ -416,17 +443,22 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-xl);
   width: 100%;
   max-width: 520px;
+  max-height: calc(100vh - 32px);
   box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: auto;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .modal-title {
@@ -439,8 +471,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .modal-body {
   padding: 24px;
-  max-height: 80vh;
   overflow-y: auto;
+  flex: 1 1 auto;
 }
 
 .modal-footer {
@@ -450,12 +482,15 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
-/* Tables */
+/* Desktop Table View */
 .table-container {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
   background: var(--bg-card);
@@ -479,6 +514,7 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
 }
 
 td {
@@ -501,6 +537,15 @@ tbody tr:hover {
   background: rgba(255, 255, 255, 0.03);
 }
 
+/* Responsive Transaction View */
+.transaction-desktop-view {
+  display: block;
+}
+
+.transaction-mobile-view {
+  display: none;
+}
+
 /* Toast Notification */
 .toast-container {
   position: fixed;
@@ -511,6 +556,7 @@ tbody tr:hover {
   gap: 10px;
   z-index: 2000;
   pointer-events: none;
+  max-width: calc(100vw - 32px);
 }
 
 .toast {
@@ -596,7 +642,7 @@ tbody tr:hover {
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* Utility Layouts */
+/* Responsive Containers & Grids */
 .container {
   width: 100%;
   max-width: 1240px;
@@ -604,12 +650,8 @@ tbody tr:hover {
   padding: 0 24px;
 }
 
-.page-header {
-  margin-bottom: 32px;
-}
-
 .page-title {
-  font-size: 28px;
+  font-size: clamp(22px, 3.5vw, 28px);
   font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 6px;
@@ -617,7 +659,8 @@ tbody tr:hover {
 
 .page-subtitle {
   color: var(--text-secondary);
-  font-size: 15px;
+  font-size: clamp(13px, 2vw, 15px);
+  line-height: 1.5;
 }
 
 .grid-2 {
@@ -638,23 +681,144 @@ tbody tr:hover {
   gap: 20px;
 }
 
-@media (max-width: 900px) {
-  .grid-3, .grid-4 {
-    grid-template-columns: repeat(2, 1fr);
+/* Responsive Navigation Helpers */
+.nav-desktop-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-desktop-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-mobile-toggle {
+  display: none;
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   - Desktop Large: 1440px+
+   - Desktop: 1024px – 1439px
+   - Tablet: 768px – 1023px
+   - Mobile: 480px – 767px
+   - Small Mobile: <480px
+   ============================================================ */
+
+/* Tablet & Smaller (<1024px) */
+@media (max-width: 1023px) {
+  .nav-desktop-links {
+    display: none;
   }
-  .grid-2 {
-    grid-template-columns: 1fr;
+  
+  .nav-desktop-actions {
+    display: none;
+  }
+
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
   }
 }
 
-@media (max-width: 600px) {
-  .grid-3, .grid-4, .grid-2 {
-    grid-template-columns: 1fr;
-  }
+/* Mobile & Tablet Portrait (<768px) */
+@media (max-width: 767px) {
   .container {
     padding: 0 16px;
   }
+
+  .grid-3, .grid-4, .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .card {
+    padding: 18px;
+    border-radius: var(--radius-md);
+  }
+
   .modal-dialog {
-    margin: 10px;
+    border-radius: var(--radius-lg);
+    max-height: calc(100vh - 20px);
+  }
+
+  .modal-header {
+    padding: 14px 18px;
+  }
+
+  .modal-body {
+    padding: 18px;
+  }
+
+  .modal-footer {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* Transaction View Switch: Table to Cards */
+  .transaction-desktop-view {
+    display: none;
+  }
+
+  .transaction-mobile-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .toast-container {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+  }
+
+  .toast {
+    width: 100%;
+  }
+}
+
+/* Small Mobile (<480px) */
+@media (max-width: 479px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .btn {
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .modal-body {
+    padding: 14px;
   }
 }

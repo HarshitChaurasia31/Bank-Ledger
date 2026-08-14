@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, ArrowDownLeft, ArrowUpRight, Shield, Clock, Hash, Key } from 'lucide-react';
+import { X, Copy, Check, ArrowDownLeft, ArrowUpRight, Shield, Clock, Hash, Key, RotateCcw, Loader2 } from 'lucide-react';
 import { useBank } from '../context/BankContext';
 
 export function TransactionDetailModal({ transaction, isOpen, onClose }) {
-  const { activeAccount, showToast } = useBank();
+  const { activeAccount, showToast, retryTransaction } = useBank();
   const [copiedField, setCopiedField] = useState(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   if (!isOpen || !transaction) return null;
 
@@ -14,6 +15,19 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
       setCopiedField(fieldName);
       showToast(`${fieldName} copied to clipboard`, 'info');
       setTimeout(() => setCopiedField(null), 2000);
+    }
+  };
+
+  const handleRetryPayment = async () => {
+    if (!transaction || transaction.status !== 'PENDING' || !transaction.idempotencyKey) return;
+    try {
+      setIsRetrying(true);
+      await retryTransaction(transaction.idempotencyKey);
+      onClose();
+    } catch (err) {
+      console.error('Failed to retry payment:', err);
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -27,6 +41,7 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
 
   const isOutflow = fromAccountId === activeAccount?._id;
   const isInitial = transaction.type === 'INITIAL_FUND';
+  const isPending = transaction.status === 'PENDING';
 
   const formattedDate = transaction.createdAt
     ? new Date(transaction.createdAt).toLocaleString('en-IN', {
@@ -41,13 +56,13 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
         {/* Header */}
         <div className="modal-header">
           <div className="modal-title">
-            <Shield size={18} style={{ color: 'var(--primary)' }} />
-            <span>Transaction Details</span>
+            <Shield size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+            <span style={{ fontSize: 'clamp(15px, 3.5vw, 18px)' }}>Transaction Details</span>
           </div>
           <button
             onClick={onClose}
             className="btn btn-icon btn-sm btn-outline"
-            style={{ border: 'none' }}
+            style={{ border: 'none', width: '32px', height: '32px', minHeight: '32px' }}
           >
             <X size={18} />
           </button>
@@ -59,9 +74,9 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
           <div
             style={{
               textAlign: 'center',
-              padding: '16px 0 20px',
+              padding: '12px 0 16px',
               borderBottom: '1px solid var(--border-subtle)',
-              marginBottom: '20px',
+              marginBottom: '16px',
             }}
           >
             <div
@@ -69,8 +84,8 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '48px',
-                height: '48px',
+                width: '44px',
+                height: '44px',
                 borderRadius: 'var(--radius-full)',
                 background: isInitial
                   ? 'rgba(99, 102, 241, 0.15)'
@@ -78,22 +93,22 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
                   ? 'rgba(239, 68, 68, 0.15)'
                   : 'rgba(16, 185, 129, 0.15)',
                 color: isInitial ? '#a5b4fc' : isOutflow ? '#f87171' : '#34d399',
-                marginBottom: '12px',
+                marginBottom: '10px',
               }}
             >
               {isInitial ? (
-                <Shield size={24} />
+                <Shield size={22} />
               ) : isOutflow ? (
-                <ArrowUpRight size={24} />
+                <ArrowUpRight size={22} />
               ) : (
-                <ArrowDownLeft size={24} />
+                <ArrowDownLeft size={22} />
               )}
             </div>
 
             <div
               className="font-mono"
               style={{
-                fontSize: '28px',
+                fontSize: 'clamp(22px, 5.5vw, 28px)',
                 fontWeight: 800,
                 color: isOutflow ? '#f87171' : '#34d399',
               }}
@@ -101,7 +116,7 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
               {isOutflow ? '-' : '+'}₹{transaction.amount?.toLocaleString('en-IN') || '0'}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
               <span className={`badge badge-${transaction.status?.toLowerCase()}`}>
                 {transaction.status}
               </span>
@@ -116,7 +131,7 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '14px',
+              gap: '12px',
               fontSize: '13px',
             }}
           >
@@ -124,7 +139,7 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
             <div
               style={{
                 background: 'var(--bg-input)',
-                padding: '10px 14px',
+                padding: '10px 12px',
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-subtle)',
               }}
@@ -136,12 +151,12 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
                 <button
                   onClick={() => handleCopy(transaction._id, 'Transaction ID')}
                   className="btn btn-icon btn-sm"
-                  style={{ width: '20px', height: '20px', background: 'transparent', border: 'none', color: copiedField === 'Transaction ID' ? 'var(--primary)' : 'var(--text-muted)' }}
+                  style={{ width: '22px', height: '22px', minHeight: '22px', background: 'transparent', border: 'none', color: copiedField === 'Transaction ID' ? 'var(--primary)' : 'var(--text-muted)' }}
                 >
                   {copiedField === 'Transaction ID' ? <Check size={12} /> : <Copy size={12} />}
                 </button>
               </div>
-              <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', wordBreak: 'break-all' }}>
+              <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', wordBreak: 'break-all', fontSize: '12px' }}>
                 {transaction._id}
               </div>
             </div>
@@ -150,7 +165,7 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
             <div
               style={{
                 background: 'var(--bg-input)',
-                padding: '10px 14px',
+                padding: '10px 12px',
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-subtle)',
               }}
@@ -162,12 +177,12 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
                 <button
                   onClick={() => handleCopy(fromAccountId, 'Debited Account ID')}
                   className="btn btn-icon btn-sm"
-                  style={{ width: '20px', height: '20px', background: 'transparent', border: 'none', color: copiedField === 'Debited Account ID' ? 'var(--primary)' : 'var(--text-muted)' }}
+                  style={{ width: '22px', height: '22px', minHeight: '22px', background: 'transparent', border: 'none', color: copiedField === 'Debited Account ID' ? 'var(--primary)' : 'var(--text-muted)' }}
                 >
                   {copiedField === 'Debited Account ID' ? <Check size={12} /> : <Copy size={12} />}
                 </button>
               </div>
-              <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', wordBreak: 'break-all' }}>
+              <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', wordBreak: 'break-all', fontSize: '12px' }}>
                 {fromAccountId || 'System Reserve'}
               </div>
             </div>
@@ -176,7 +191,7 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
             <div
               style={{
                 background: 'var(--bg-input)',
-                padding: '10px 14px',
+                padding: '10px 12px',
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-subtle)',
               }}
@@ -188,12 +203,12 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
                 <button
                   onClick={() => handleCopy(toAccountId, 'Credited Account ID')}
                   className="btn btn-icon btn-sm"
-                  style={{ width: '20px', height: '20px', background: 'transparent', border: 'none', color: copiedField === 'Credited Account ID' ? 'var(--primary)' : 'var(--text-muted)' }}
+                  style={{ width: '22px', height: '22px', minHeight: '22px', background: 'transparent', border: 'none', color: copiedField === 'Credited Account ID' ? 'var(--primary)' : 'var(--text-muted)' }}
                 >
                   {copiedField === 'Credited Account ID' ? <Check size={12} /> : <Copy size={12} />}
                 </button>
               </div>
-              <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', wordBreak: 'break-all' }}>
+              <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', wordBreak: 'break-all', fontSize: '12px' }}>
                 {toAccountId}
               </div>
             </div>
@@ -202,7 +217,7 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
             <div
               style={{
                 background: 'var(--bg-input)',
-                padding: '10px 14px',
+                padding: '10px 12px',
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-subtle)',
               }}
@@ -214,7 +229,7 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
                 <button
                   onClick={() => handleCopy(transaction.idempotencyKey, 'Idempotency Key')}
                   className="btn btn-icon btn-sm"
-                  style={{ width: '20px', height: '20px', background: 'transparent', border: 'none', color: copiedField === 'Idempotency Key' ? 'var(--primary)' : 'var(--text-muted)' }}
+                  style={{ width: '22px', height: '22px', minHeight: '22px', background: 'transparent', border: 'none', color: copiedField === 'Idempotency Key' ? 'var(--primary)' : 'var(--text-muted)' }}
                 >
                   {copiedField === 'Idempotency Key' ? <Check size={12} /> : <Copy size={12} />}
                 </button>
@@ -225,7 +240,7 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
             </div>
 
             {/* Timestamp */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px', color: 'var(--text-muted)', fontSize: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px', color: 'var(--text-muted)', fontSize: '12px', flexWrap: 'wrap', gap: '4px' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <Clock size={13} /> Recorded Timestamp:
               </span>
@@ -236,13 +251,46 @@ export function TransactionDetailModal({ transaction, isOpen, onClose }) {
 
         {/* Footer */}
         <div className="modal-footer">
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-secondary"
-          >
-            Close
-          </button>
+          {isPending ? (
+            <>
+              <button
+                type="button"
+                onClick={handleRetryPayment}
+                disabled={isRetrying}
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+              >
+                {isRetrying ? (
+                  <>
+                    <Loader2 size={16} className="animate-pulse" />
+                    <span>Retrying Payment...</span>
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw size={16} />
+                    <span>Retry Payment</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isRetrying}
+                className="btn btn-secondary"
+              >
+                Close
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-secondary"
+              style={{ width: '100%' }}
+            >
+              Close
+            </button>
+          )}
         </div>
       </div>
     </div>

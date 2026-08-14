@@ -25,12 +25,25 @@ function maskAccountId(id) {
   return `${id.substring(0, 6)} •••• •••• ${id.substring(id.length - 6)}`;
 }
 
+/**
+ * Format recipient display with optional owner name in brackets safely
+ * e.g. "6a7b72 •••• •••• bb00f0 (Harshit Chaurasia)" or "6a7b72 •••• •••• bb00f0"
+ */
+function formatRecipientDisplay(accountId, userName) {
+  const masked = maskAccountId(accountId);
+  if (userName && typeof userName === 'string' && userName.trim()) {
+    return `${masked} (${userName.trim()})`;
+  }
+  return masked;
+}
+
 export function TransferModal({ isOpen, onClose }) {
   const { accounts, activeAccount, executeTransfer } = useBank();
 
   // Full internal MongoDB _id strings
   const [fromAccount, setFromAccount] = useState('');
   const [toAccount, setToAccount] = useState('');
+  const [toAccountName, setToAccountName] = useState('');
   const [amount, setAmount] = useState('');
   const [idempotencyKey, setIdempotencyKey] = useState('');
   const [isConfirmStep, setIsConfirmStep] = useState(false);
@@ -62,6 +75,7 @@ export function TransferModal({ isOpen, onClose }) {
       const initialAccount = activeAccount?._id || (accounts[0]?._id || '');
       setFromAccount(initialAccount);
       setToAccount('');
+      setToAccountName('');
       setAmount('');
       setError('');
       setIsConfirmStep(false);
@@ -263,14 +277,17 @@ export function TransferModal({ isOpen, onClose }) {
     }
   };
 
-  const handleSelectRecipient = (accountId) => {
-    setToAccount(accountId);
+  const handleSelectRecipient = (acc) => {
+    if (!acc) return;
+    setToAccount(acc._id || '');
+    setToAccountName(acc.user?.name || '');
     setIsRecipientOpen(false);
     setRecipientQuery('');
   };
 
   const handleClearRecipient = () => {
     setToAccount('');
+    setToAccountName('');
     setRecipientQuery('');
     setIsRecipientOpen(true);
   };
@@ -281,13 +298,15 @@ export function TransferModal({ isOpen, onClose }) {
         {/* Header */}
         <div className="modal-header">
           <div className="modal-title">
-            <Send size={18} style={{ color: 'var(--primary)' }} />
-            <span>{successResult ? 'Transfer Completed' : isConfirmStep ? 'Confirm Money Transfer' : 'Transfer Money'}</span>
+            <Send size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+            <span style={{ fontSize: 'clamp(15px, 3.5vw, 18px)' }}>
+              {successResult ? 'Transfer Completed' : isConfirmStep ? 'Confirm Money Transfer' : 'Transfer Money'}
+            </span>
           </div>
           <button
             onClick={onClose}
             className="btn btn-icon btn-sm btn-outline"
-            style={{ border: 'none' }}
+            style={{ border: 'none', width: '32px', height: '32px', minHeight: '32px' }}
           >
             <X size={18} />
           </button>
@@ -304,25 +323,27 @@ export function TransferModal({ isOpen, onClose }) {
 
           {successResult ? (
             /* Success View */
-            <div style={{ textAlign: 'center', padding: '16px 0' }}>
+            <div style={{ textAlign: 'center', padding: '8px 0 16px' }}>
               <div
                 style={{
-                  width: '64px',
-                  height: '64px',
+                  width: '56px',
+                  height: '56px',
                   borderRadius: 'var(--radius-full)',
                   background: 'rgba(16, 185, 129, 0.12)',
                   border: '1px solid rgba(16, 185, 129, 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '0 auto 16px',
+                  margin: '0 auto 14px',
                 }}
               >
-                <CheckCircle2 size={36} style={{ color: 'var(--primary)' }} />
+                <CheckCircle2 size={32} style={{ color: 'var(--primary)' }} />
               </div>
 
-              <h3 style={{ fontSize: '22px', marginBottom: '6px' }}>₹{Number(amount).toLocaleString('en-IN')}</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: 'clamp(20px, 4.5vw, 24px)', marginBottom: '6px' }}>
+                ₹{Number(amount).toLocaleString('en-IN')}
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '18px' }}>
                 {successResult.message || 'Transaction executed successfully.'}
               </p>
 
@@ -331,7 +352,7 @@ export function TransferModal({ isOpen, onClose }) {
                   background: 'var(--bg-input)',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-md)',
-                  padding: '16px',
+                  padding: '14px',
                   textAlign: 'left',
                   fontSize: '13px',
                   display: 'flex',
@@ -339,25 +360,25 @@ export function TransferModal({ isOpen, onClose }) {
                   gap: '8px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Status:</span>
                   <span className="badge badge-completed">
                     {successResult.transaction?.status || 'COMPLETED'}
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Source Account:</span>
-                  <span className="font-mono" style={{ color: 'var(--text-primary)' }}>
+                  <span className="font-mono" style={{ color: 'var(--text-primary)', fontSize: '12px' }}>
                     {maskAccountId(fromAccount)}
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Recipient Account:</span>
-                  <span className="font-mono" style={{ color: 'var(--text-primary)' }}>
-                    {maskAccountId(toAccount)}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>Recipient Account:</span>
+                  <span className="font-mono" style={{ color: 'var(--text-primary)', fontSize: '12px', textAlign: 'right', wordBreak: 'break-all' }}>
+                    {formatRecipientDisplay(toAccount, toAccountName)}
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Idempotency Key:</span>
                   <span className="font-mono" style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
                     {idempotencyKey.substring(0, 12)}...
@@ -373,15 +394,23 @@ export function TransferModal({ isOpen, onClose }) {
                   background: 'rgba(16, 185, 129, 0.05)',
                   border: '1px solid rgba(16, 185, 129, 0.2)',
                   borderRadius: 'var(--radius-md)',
-                  padding: '18px',
-                  marginBottom: '20px',
+                  padding: '16px',
+                  marginBottom: '18px',
                   textAlign: 'center',
                 }}
               >
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                   Amount to Transfer
                 </span>
-                <div className="font-mono" style={{ fontSize: '28px', fontWeight: 800, color: '#34d399', margin: '4px 0' }}>
+                <div
+                  className="font-mono"
+                  style={{
+                    fontSize: 'clamp(22px, 5.5vw, 28px)',
+                    fontWeight: 800,
+                    color: '#34d399',
+                    margin: '4px 0',
+                  }}
+                >
                   ₹{Number(amount).toLocaleString('en-IN')}
                 </div>
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
@@ -394,7 +423,7 @@ export function TransferModal({ isOpen, onClose }) {
                   background: 'var(--bg-input)',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-md)',
-                  padding: '16px',
+                  padding: '14px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
@@ -405,7 +434,7 @@ export function TransferModal({ isOpen, onClose }) {
                   <div style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>
                     Debiting Source Account
                   </div>
-                  <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', fontWeight: 600 }}>
+                  <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', fontWeight: 600, fontSize: '13px' }}>
                     {maskAccountId(fromAccount)}
                   </div>
                 </div>
@@ -414,16 +443,21 @@ export function TransferModal({ isOpen, onClose }) {
                   <div style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>
                     Crediting Recipient Account
                   </div>
-                  <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', fontWeight: 600 }}>
-                    {maskAccountId(toAccount)}
+                  <div className="font-mono" style={{ color: 'var(--text-primary)', marginTop: '2px', fontWeight: 600, fontSize: '13px' }}>
+                    {formatRecipientDisplay(toAccount, toAccountName)}
                   </div>
+                  {toAccountName && (
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                      Beneficiary: {toAccountName}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
                   <div style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>
                     Idempotency Key (Safe Retry Token)
                   </div>
-                  <div className="font-mono" style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '2px' }}>
+                  <div className="font-mono" style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '2px', wordBreak: 'break-all' }}>
                     {idempotencyKey}
                   </div>
                 </div>
@@ -479,16 +513,27 @@ export function TransferModal({ isOpen, onClose }) {
                       border: '1px solid rgba(16, 185, 129, 0.3)',
                       borderRadius: 'var(--radius-md)',
                       padding: '10px 14px',
+                      gap: '8px',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <UserCheck size={18} style={{ color: 'var(--primary)' }} />
-                      <div>
-                        <div className="font-mono" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {maskAccountId(toAccount)}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                      <UserCheck size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          className="font-mono"
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            color: 'var(--text-primary)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {formatRecipientDisplay(toAccount, toAccountName)}
                         </div>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                          Verified Active Recipient
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>
+                          {toAccountName ? `Verified Recipient · ${toAccountName}` : 'Verified Active Recipient'}
                         </span>
                       </div>
                     </div>
@@ -496,7 +541,7 @@ export function TransferModal({ isOpen, onClose }) {
                       type="button"
                       onClick={handleClearRecipient}
                       className="btn btn-sm btn-secondary"
-                      style={{ padding: '4px 10px', fontSize: '12px' }}
+                      style={{ padding: '4px 10px', fontSize: '12px', minHeight: '30px', flexShrink: 0 }}
                     >
                       Change
                     </button>
@@ -550,7 +595,7 @@ export function TransferModal({ isOpen, onClose }) {
                             background: 'rgba(0, 0, 0, 0.25)',
                           }}
                         >
-                          <Search size={14} style={{ color: 'var(--text-muted)' }} />
+                          <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                           <input
                             type="text"
                             value={recipientQuery}
@@ -568,12 +613,12 @@ export function TransferModal({ isOpen, onClose }) {
                             }}
                           />
                           {isSearchingRecipients && (
-                            <Loader2 size={14} className="animate-pulse" style={{ color: 'var(--primary)' }} />
+                            <Loader2 size={14} className="animate-pulse" style={{ color: 'var(--primary)', flexShrink: 0 }} />
                           )}
                         </div>
 
                         {/* Search Results List */}
-                        <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                        <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           <div
                             style={{
                               padding: '8px 12px 4px',
@@ -600,40 +645,57 @@ export function TransferModal({ isOpen, onClose }) {
                               No matching account found
                             </div>
                           ) : (
-                            recipientResults.map((acc) => (
-                              <div
-                                key={acc._id}
-                                onClick={() => handleSelectRecipient(acc._id)}
-                                style={{
-                                  padding: '10px 14px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  cursor: 'pointer',
-                                  borderBottom: '1px solid var(--border-subtle)',
-                                  transition: 'background var(--transition-fast)',
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(16, 185, 129, 0.08)')}
-                                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                              >
-                                <div>
-                                  <div className="font-mono" style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                                    {maskAccountId(acc._id)}
+                            recipientResults.map((acc) => {
+                              const userName = acc.user?.name?.trim();
+                              const maskedId = maskAccountId(acc._id);
+                              const displayText = userName ? `${maskedId} (${userName})` : maskedId;
+
+                              return (
+                                <div
+                                  key={acc._id}
+                                  onClick={() => handleSelectRecipient(acc)}
+                                  style={{
+                                    padding: '10px 14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid var(--border-subtle)',
+                                    transition: 'background var(--transition-fast)',
+                                    gap: '8px',
+                                  }}
+                                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(16, 185, 129, 0.08)')}
+                                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                  <div style={{ minWidth: 0 }}>
+                                    <div
+                                      className="font-mono"
+                                      style={{
+                                        fontSize: '13px',
+                                        color: 'var(--text-primary)',
+                                        fontWeight: 600,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                      }}
+                                    >
+                                      {displayText}
+                                    </div>
+                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                      {userName ? `Account Owner: ${userName}` : 'Lena Dena Premier Account'}
+                                    </span>
                                   </div>
-                                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                    Lena Dena Premier Account
-                                  </span>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                                    <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                                      {acc.status || 'Active'}
+                                    </span>
+                                    <span className="font-mono" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                      {acc.currency || 'INR'}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  <span className="badge badge-active" style={{ fontSize: '10px' }}>
-                                    {acc.status || 'Active'}
-                                  </span>
-                                  <span className="font-mono" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                    {acc.currency || 'INR'}
-                                  </span>
-                                </div>
-                              </div>
-                            ))
+                              );
+                            })
                           )}
                         </div>
                       </div>
@@ -650,7 +712,7 @@ export function TransferModal({ isOpen, onClose }) {
                     type="button"
                     onClick={handleSetMaxAmount}
                     className="btn btn-sm btn-outline"
-                    style={{ padding: '2px 8px', fontSize: '11px' }}
+                    style={{ padding: '2px 8px', fontSize: '11px', minHeight: '26px' }}
                     disabled={isSourceBalanceLoading || typeof sourceBalance !== 'number' || sourceBalance <= 0}
                   >
                     MAX
@@ -666,15 +728,22 @@ export function TransferModal({ isOpen, onClose }) {
                   className="form-control font-mono"
                   required
                 />
-                {/* Quick Chips */}
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                {/* Quick Chips Grid */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: '6px',
+                    marginTop: '8px',
+                  }}
+                >
                   {quickAmounts.map((q) => (
                     <button
                       key={q}
                       type="button"
                       onClick={() => handleQuickAmount(q)}
                       className="btn btn-secondary btn-sm"
-                      style={{ flex: 1, padding: '4px', fontSize: '12px' }}
+                      style={{ padding: '6px 4px', fontSize: '12px', minHeight: '32px' }}
                     >
                       +₹{q}
                     </button>
@@ -702,7 +771,7 @@ export function TransferModal({ isOpen, onClose }) {
                     onClick={generateNewKey}
                     title="Generate fresh idempotency key"
                     className="btn btn-icon btn-sm"
-                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', width: '20px', height: '20px' }}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', width: '22px', height: '22px', minHeight: '22px' }}
                   >
                     <RefreshCw size={12} />
                   </button>
@@ -729,6 +798,7 @@ export function TransferModal({ isOpen, onClose }) {
               type="button"
               onClick={onClose}
               className="btn btn-primary"
+              style={{ minWidth: '100px' }}
             >
               Done
             </button>
