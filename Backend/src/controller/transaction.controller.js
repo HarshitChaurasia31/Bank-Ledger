@@ -300,4 +300,80 @@ async function historyTransaction(req, res) {
         transactions
     });
 }
-module.exports = { createTransaction, createIntialFundTransaction, historyTransaction }
+
+async function retryPending(req, res) {
+    const { idempotencyKey } = req.body;
+    const transactiondetails = await transactionModel.findOne({ idempotencyKey });
+    if (!transactiondetails) {
+        return res.status(404).json({
+            message: "Transaction not found"
+        });
+    }
+    if (transactiondetails.status === "PENDING") {
+        const ledgerentries = await ledgerModel.findOne({ transaction: transactiondetails._id });
+        if (ledgerentries === null) {
+            const fromAccount = await accountModel.findById(transactiondetails.fromAccount);
+            const toAccount = await accountModel.findById(transactiondetails.toAccount);
+            if (!fromAccount) {
+                return res.status(400).json({
+                    message: "Invalid account credentials(For)"
+                })
+            }
+            if(!toAccount){
+                return res.status(400).json({
+                    message: "Invalid account credentials(To)"
+                })
+            }
+            const session=await mongoose.startSession();
+            try {
+                session.startTransaction();
+                const balance = await fromAccount.getBalance(session)
+                if (balance < transactiondetails.amount) {
+                    await session.abortTransaction();
+                    return res.status(400).json({
+                        message: `Insufficient balance.Current Balance is ${balance}.Requested amount is ${transactiondetails.amount}`
+                    })
+                }
+                await ledgerModel.create([{
+                    account: fromAccount._id,
+                    amount: transactiondetails.amount,
+                    transaction: transactiondetails._id,
+                    type: "DEBIT"
+                }], { session })
+                await ledgerModel.create([{
+                    account: toAccount._id,
+                    amount: transactiondetails.amount,
+                    transaction: transactiondetails._id,
+                    type: "CREDIT"
+                }], { session })
+                transactiondetails.status = "COMPLETED"
+                await transactiondetails.save({ session });
+
+                await session.commitTransaction()
+                if (transactiondetails.status === "COMPLETED") {
+                    await emailService.sendTransactionEmail(transactiondetails.amount, transactiondetails.toAccount)
+                }
+                return res.status(201).json({
+                    message: "Transaction completed successfullly",
+                    transaction: transactiondetails
+                })
+            } catch (err) {
+                await session.abortTransaction();
+                if (transactiondetails) {
+                    transactiondetails.status = "FAILED";
+                    await transactiondetails.save();
+                    if (transactiondetails.status === "FAILED") {
+                        await emailService.sendTransactionFailureEmail(transactiondetails.amount, transactiondetails.toAccount)
+                    }
+                }
+                return res.status(500).json({
+                    message: "Transaction failed",
+                    error: err.message
+                });
+            } finally {
+                await session.endSession();
+            }
+        }
+    }
+}
+module.exports = { createTransaction, createIntialFundTransaction, historyTransaction , retryPending}

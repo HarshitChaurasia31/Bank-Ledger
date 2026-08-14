@@ -87,23 +87,34 @@ async function searchAccounts(req, res) {
                     $toString: "$_id"
                 }
             }
+        },{
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+            }
+        },{
+            $unwind: "$user"
         }
         ]
         if (search) {
             pipeline.push({
                 $match: {
                     accountIdString: {
-                        $regex: `^${q.trim()}`,
+                        $regex: `^${search}`,
                         $options: "i"
                     }
                 }
             })
         }
+
         pipeline.push({
             $project: {
                 _id: 1,
                 currency: 1,
-                status: 1
+                status: 1,
+                "user.name": 1
             }
         }, {
             $limit: safeLimit

@@ -16,6 +16,16 @@ router.post('/',authMiddleware.authMiddleware,transactionLimiter,transactionCont
  */
 router.post('/system/intial-funds',authMiddleware.authsystemuserMiddleware,transactionController.createIntialFundTransaction)
 
+/**
+ * - GET /api/transactions/history
+ * - Gives the history of transaction by user
+ */
 router.get('/history',authMiddleware.authMiddleware,transactionController.historyTransaction)
+
+/**
+ * - POST /api/transactions/retry
+ * - Retry the pending payment in transaction history
+ */
+router.post('/retry',authMiddleware.authMiddleware,transactionController.retryPending)
 
 module.exports=router
