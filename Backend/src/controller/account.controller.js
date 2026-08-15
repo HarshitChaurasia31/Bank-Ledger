@@ -1,4 +1,5 @@
 const accountModel = require('../models/account.model')
+const userModel = require('../models/user.model')
 const intializeFund = require('../services/transaction.service')
 const mongoose = require('mongoose')
 async function createAccountController(req, res) {
@@ -132,4 +133,21 @@ async function searchAccounts(req, res) {
         });
     }
 }
-module.exports = { createAccountController, getUserAccountController, getAccountBalance, searchAccounts }
+
+async function getAllAccounts(req , res) {
+    const user= await userModel.findById(req.user._id).select("+systemUser");
+    if(user.systemUser!== true){
+        return res.status(403).json({
+            message:"Unauthorized Access"
+        })
+    }
+    const accounts = await accountModel.find({
+        _id : {
+            $ne : process.env.SYSTEM_ACCOUNT_ID
+        }
+    }).populate("user" , "name email")
+    return res.status(200).json({
+        accounts
+    })
+}
+module.exports = { createAccountController, getUserAccountController, getAccountBalance, searchAccounts , getAllAccounts}

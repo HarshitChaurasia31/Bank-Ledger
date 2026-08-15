@@ -93,7 +93,7 @@ async function userLoginController(req, res) {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 3 * 24 * 60 * 60 * 1000
-    })  
+    })
 
     res.status(200).json({
         message: "User Loggedin",
@@ -126,4 +126,48 @@ async function userLogoutController(req, res) {
     })
 }
 
-module.exports = { userRegisterController, userLoginController, userLogoutController }
+async function adminLoginController(req, res) {
+    const { email, password } = req.body
+
+    const user = await userModel.findOne({
+        email
+    }).select("+password +systemUser")
+    if (!user) {
+        return res.status(401).json({
+            message: "Email/Password is invalid"
+        })
+    }
+    if (user.systemUser !== true) {
+        return res.status(403).json({
+            message: "Only admin user allowed",
+        })
+    }
+    const isValidPassword = await user.comparePassword(password)
+    if (!isValidPassword) {
+        return res.status(401).json({
+            message: "Email/Password is invalid"
+        })
+    }
+    const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "3d" }
+    )
+
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 3 * 24 * 60 * 60 * 1000
+    })
+
+    res.status(200).json({
+        message: "Admin Logged in",
+        admin: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+        }
+    })
+}
+module.exports = { userRegisterController, userLoginController, userLogoutController, adminLoginController }

@@ -324,6 +324,11 @@ async function retryPending(req, res) {
                     message: "Invalid account credentials(To)"
                 })
             }
+            if(fromAccount.status!=="Active" || toAccount.status!=="Active"){
+                return res.status(400).json({
+                    message: "Cannot transfer fund to froze account"
+                })
+            }
             const session=await mongoose.startSession();
             try {
                 session.startTransaction();

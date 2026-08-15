@@ -11,5 +11,7 @@ router.post('/register',authLimiter, authController.userRegisterController)
 
 router.post('/login',authLimiter, authController.userLoginController)
 
+router.post('/system-login',authLimiter,authController.adminLoginController)
+
 router.post('/logout', authController.userLogoutController)
 module.exports = router
