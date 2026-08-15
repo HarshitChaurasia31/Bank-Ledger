@@ -12,12 +12,14 @@ import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { AccountsPage } from './pages/AccountsPage';
+import { AdminLoginPage } from './pages/AdminLoginPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 import { Loader2 } from 'lucide-react';
 
 /**
- * Route guard for authenticated user paths
+ * Route guard for authenticated customer paths
  */
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -50,7 +52,7 @@ function ProtectedRoute({ children }) {
 }
 
 /**
- * Route guard for public paths (redirects to dashboard if already authenticated)
+ * Route guard for customer public paths (redirects to dashboard if already authenticated)
  */
 function PublicRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -67,7 +69,7 @@ function PublicRoute({ children }) {
 }
 
 /**
- * Main Layout containing Navbar and Global Transfer Modal
+ * Customer App Layout containing Navbar, Global Transfer Modal, and Footer
  */
 function AppLayout({ children }) {
   const [isGlobalTransferOpen, setIsGlobalTransferOpen] = useState(false);
@@ -112,7 +114,7 @@ export default function App() {
           <RateLimitBanner />
           <ToastContainer />
           <Routes>
-            {/* Public Routes */}
+            {/* Customer Public Routes */}
             <Route
               path="/login"
               element={
@@ -130,7 +132,7 @@ export default function App() {
               }
             />
 
-            {/* Protected Routes */}
+            {/* Customer Protected Routes */}
             <Route
               path="/"
               element={
@@ -161,6 +163,10 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Admin System Routes */}
+            <Route path="/system-login" element={<AdminLoginPage />} />
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
 
             {/* 404 Route */}
             <Route path="*" element={<NotFoundPage />} />

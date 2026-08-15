@@ -93,7 +93,17 @@ export const authApi = {
     }),
 
   /**
-   * Log out the active user and clear session cookie
+   * Log in a system administrator
+   * POST /api/auth/system-login
+   */
+  systemLogin: (credentials) =>
+    request('/auth/system-login', {
+      method: 'POST',
+      body: credentials,
+    }),
+
+  /**
+   * Log out the active user/admin and clear session cookie
    * POST /api/auth/logout
    */
   logout: () =>
@@ -148,6 +158,15 @@ export const accountsApi = {
       method: 'GET',
     });
   },
+
+  /**
+   * Retrieve all customer accounts for the Admin Dashboard (excludes system account)
+   * GET /api/accounts/admin/dashboard
+   */
+  getAdminAccounts: () =>
+    request('/accounts/admin/dashboard', {
+      method: 'GET',
+    }),
 };
 
 // ----------------------------------------------------
