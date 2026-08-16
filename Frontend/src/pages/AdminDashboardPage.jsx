@@ -7,13 +7,14 @@ import {
   Copy,
   Check,
   User,
-  Mail,
   CreditCard,
   AlertCircle,
   Loader2,
   Users,
   CheckCircle2,
   Lock,
+  Unlock,
+  X,
 } from 'lucide-react';
 import { accountsApi, ApiError } from '../api/client';
 import { AdminNavbar } from '../components/AdminNavbar';
@@ -37,11 +38,15 @@ export function AdminDashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [copiedId, setCopiedId] = useState(null);
-  const [toastMessage, setToastMessage] = useState(null);
+  const [toast, setToast] = useState(null); // { message, type: 'success' | 'danger' }
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+  // Status Change Confirmation State
+  const [pendingStatusChange, setPendingStatusChange] = useState(null); // { account, targetStatus: 'Frozen' | 'Active' }
+  const [updatingAccountId, setUpdatingAccountId] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type, id: Date.now() });
+    setTimeout(() => setToast(null), 3500);
   };
 
   const handleCopy = (e, text) => {
@@ -49,7 +54,7 @@ export function AdminDashboardPage() {
     if (text) {
       navigator.clipboard.writeText(text);
       setCopiedId(text);
-      showToast('Account ID copied to clipboard');
+      showToast('Account ID copied to clipboard', 'success');
       setTimeout(() => setCopiedId(null), 2000);
     }
   };
@@ -71,12 +76,12 @@ export function AdminDashboardPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401) {
-          // Session unauthenticated $\rightarrow$ redirect to system login
+          // Session unauthenticated -> redirect to system login
           navigate('/system-login', { replace: true });
           return;
         }
         if (err.status === 403) {
-          // Non-admin user $\rightarrow$ redirect to system login
+          // Non-admin user -> redirect to system login
           navigate('/system-login', { replace: true });
           return;
         }
@@ -96,6 +101,58 @@ export function AdminDashboardPage() {
 
   const handleManualRefresh = () => {
     loadAccounts(true);
+  };
+
+  /**
+   * Execute PATCH /api/accounts/admin/:accountId/status with { status: 'Frozen' | 'Active' }
+   */
+  const handleConfirmStatusChange = async () => {
+    if (!pendingStatusChange || updatingAccountId) return;
+
+    const { account, targetStatus } = pendingStatusChange;
+    try {
+      setUpdatingAccountId(account._id);
+
+      await accountsApi.updateAccountStatus(account._id, targetStatus);
+
+      // Update existing account in local state immediately without full page reload
+      setAccounts((prev) =>
+        prev.map((a) => (a._id === account._id ? { ...a, status: targetStatus } : a))
+      );
+
+      showToast(
+        targetStatus === 'Frozen'
+          ? 'Account frozen successfully.'
+          : 'Account unfrozen successfully.',
+        'success'
+      );
+
+      setPendingStatusChange(null);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 401) {
+          navigate('/system-login', { replace: true });
+          return;
+        }
+        if (err.status === 403) {
+          showToast('Unauthorized access.', 'danger');
+          return;
+        }
+        if (err.status === 404) {
+          showToast('Account not found.', 'danger');
+          return;
+        }
+        if (err.status === 400) {
+          showToast(err.message || 'Invalid status.', 'danger');
+          return;
+        }
+        showToast('Unable to change account status. Please try again.', 'danger');
+      } else {
+        showToast('Unable to change account status. Please try again.', 'danger');
+      }
+    } finally {
+      setUpdatingAccountId(null);
+    }
   };
 
   // Filter accounts by search query and status
@@ -134,7 +191,7 @@ export function AdminDashboardPage() {
       <main style={{ flex: 1 }}>
         <div className="container" style={{ paddingBottom: '60px', paddingTop: '28px' }}>
           {/* Toast Notification */}
-          {toastMessage && (
+          {toast && (
             <div
               style={{
                 position: 'fixed',
@@ -142,8 +199,8 @@ export function AdminDashboardPage() {
                 right: '24px',
                 zIndex: 2000,
                 background: 'var(--bg-surface-raised)',
-                border: '1px solid var(--success-border)',
-                color: '#ecfdf5',
+                border: toast.type === 'danger' ? '1px solid var(--danger-border)' : '1px solid var(--success-border)',
+                color: toast.type === 'danger' ? '#fca5a5' : '#ecfdf5',
                 padding: '10px 18px',
                 borderRadius: 'var(--radius-md)',
                 boxShadow: 'var(--shadow-lg)',
@@ -154,8 +211,12 @@ export function AdminDashboardPage() {
                 animation: 'slideInRight 0.3s ease-out',
               }}
             >
-              <CheckCircle2 size={16} style={{ color: 'var(--primary)' }} />
-              <span>{toastMessage}</span>
+              {toast.type === 'danger' ? (
+                <AlertCircle size={16} style={{ color: 'var(--danger)' }} />
+              ) : (
+                <CheckCircle2 size={16} style={{ color: 'var(--primary)' }} />
+              )}
+              <span>{toast.message}</span>
             </div>
           )}
 
@@ -368,7 +429,7 @@ export function AdminDashboardPage() {
                     <th>Currency</th>
                     <th>Status</th>
                     <th>Provisioned Date</th>
-                    <th style={{ textAlign: 'right' }}>Action</th>
+                    <th style={{ textAlign: 'right' }}>Account Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -403,6 +464,8 @@ export function AdminDashboardPage() {
                             year: 'numeric',
                           })
                         : '—';
+
+                      const isCurrentlyUpdating = updatingAccountId === acc._id;
 
                       return (
                         <tr key={acc._id}>
@@ -480,20 +543,65 @@ export function AdminDashboardPage() {
                             </span>
                           </td>
 
-                          {/* Action */}
+                          {/* Status Action */}
                           <td style={{ textAlign: 'right' }}>
-                            <span
-                              className="btn btn-sm btn-outline"
-                              style={{
-                                padding: '4px 10px',
-                                fontSize: '11px',
-                                minHeight: '28px',
-                                pointerEvents: 'none',
-                                opacity: 0.8,
-                              }}
-                            >
-                              {acc.status === 'Active' ? 'Active Account' : 'Account Frozen'}
-                            </span>
+                            {acc.status === 'Active' ? (
+                              <button
+                                type="button"
+                                onClick={() => setPendingStatusChange({ account: acc, targetStatus: 'Frozen' })}
+                                disabled={isCurrentlyUpdating || Boolean(updatingAccountId)}
+                                className="btn btn-sm"
+                                style={{
+                                  padding: '5px 12px',
+                                  fontSize: '12px',
+                                  minHeight: '30px',
+                                  background: 'rgba(239, 68, 68, 0.12)',
+                                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                                  color: '#f87171',
+                                }}
+                                title="Freeze this account"
+                              >
+                                {isCurrentlyUpdating ? (
+                                  <>
+                                    <Loader2 size={13} className="animate-pulse" />
+                                    <span>Freezing...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock size={13} />
+                                    <span>Freeze Account</span>
+                                  </>
+                                )}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setPendingStatusChange({ account: acc, targetStatus: 'Active' })}
+                                disabled={isCurrentlyUpdating || Boolean(updatingAccountId)}
+                                className="btn btn-sm"
+                                style={{
+                                  padding: '5px 12px',
+                                  fontSize: '12px',
+                                  minHeight: '30px',
+                                  background: 'rgba(16, 185, 129, 0.12)',
+                                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                                  color: '#34d399',
+                                }}
+                                title="Unfreeze this account"
+                              >
+                                {isCurrentlyUpdating ? (
+                                  <>
+                                    <Loader2 size={13} className="animate-pulse" />
+                                    <span>Unfreezing...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Unlock size={13} />
+                                    <span>Unfreeze Account</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -531,6 +639,8 @@ export function AdminDashboardPage() {
                       year: 'numeric',
                     })
                   : '—';
+
+                const isCurrentlyUpdating = updatingAccountId === acc._id;
 
                 return (
                   <div
@@ -611,7 +721,7 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
 
-                    {/* Card Bottom: Date */}
+                    {/* Card Bottom: Date & Action */}
                     <div
                       style={{
                         display: 'flex',
@@ -619,14 +729,69 @@ export function AdminDashboardPage() {
                         alignItems: 'center',
                         fontSize: '11px',
                         color: 'var(--text-muted)',
-                        paddingTop: '6px',
+                        paddingTop: '8px',
                         borderTop: '1px solid var(--border-subtle)',
+                        flexWrap: 'wrap',
+                        gap: '8px',
                       }}
                     >
                       <span>Provisioned: {formattedDate}</span>
-                      <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                        {acc.status === 'Active' ? 'Active Card' : 'Frozen'}
-                      </span>
+
+                      {acc.status === 'Active' ? (
+                        <button
+                          type="button"
+                          onClick={() => setPendingStatusChange({ account: acc, targetStatus: 'Frozen' })}
+                          disabled={isCurrentlyUpdating || Boolean(updatingAccountId)}
+                          className="btn btn-sm"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '11px',
+                            minHeight: '28px',
+                            background: 'rgba(239, 68, 68, 0.12)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            color: '#f87171',
+                          }}
+                        >
+                          {isCurrentlyUpdating ? (
+                            <>
+                              <Loader2 size={12} className="animate-pulse" />
+                              <span>Freezing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Lock size={12} />
+                              <span>Freeze Account</span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setPendingStatusChange({ account: acc, targetStatus: 'Active' })}
+                          disabled={isCurrentlyUpdating || Boolean(updatingAccountId)}
+                          className="btn btn-sm"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '11px',
+                            minHeight: '28px',
+                            background: 'rgba(16, 185, 129, 0.12)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            color: '#34d399',
+                          }}
+                        >
+                          {isCurrentlyUpdating ? (
+                            <>
+                              <Loader2 size={12} className="animate-pulse" />
+                              <span>Unfreezing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Unlock size={12} />
+                              <span>Unfreeze Account</span>
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -635,6 +800,115 @@ export function AdminDashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Confirmation Modal for Status Change */}
+      {pendingStatusChange && (
+        <div
+          className="modal-overlay"
+          onClick={() => !updatingAccountId && setPendingStatusChange(null)}
+        >
+          <div
+            className="modal-dialog"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '440px' }}
+          >
+            <div className="modal-header">
+              <div className="modal-title">
+                {pendingStatusChange.targetStatus === 'Frozen' ? (
+                  <Lock size={18} style={{ color: '#f87171', flexShrink: 0 }} />
+                ) : (
+                  <Unlock size={18} style={{ color: '#34d399', flexShrink: 0 }} />
+                )}
+                <span>
+                  {pendingStatusChange.targetStatus === 'Frozen'
+                    ? 'Freeze this account?'
+                    : 'Unfreeze this account?'}
+                </span>
+              </div>
+              <button
+                onClick={() => !updatingAccountId && setPendingStatusChange(null)}
+                disabled={Boolean(updatingAccountId)}
+                className="btn btn-icon btn-sm btn-outline"
+                style={{ border: 'none', width: '32px', height: '32px', minHeight: '32px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+                {pendingStatusChange.targetStatus === 'Frozen'
+                  ? 'Freezing the account will prevent transactions involving this account.'
+                  : 'Unfreezing the account will restore full transaction capabilities.'}
+              </p>
+
+              <div
+                style={{
+                  background: 'var(--bg-input)',
+                  padding: '12px 14px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-subtle)',
+                  fontSize: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Account Owner:</span>
+                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {pendingStatusChange.account.user?.name || 'Customer'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Email:</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    {pendingStatusChange.account.user?.email || '—'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Account ID:</span>
+                  <span className="font-mono" style={{ color: 'var(--text-secondary)' }}>
+                    {maskAccountId(pendingStatusChange.account._id)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                onClick={() => setPendingStatusChange(null)}
+                disabled={Boolean(updatingAccountId)}
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmStatusChange}
+                disabled={Boolean(updatingAccountId)}
+                className={pendingStatusChange.targetStatus === 'Frozen' ? 'btn btn-danger' : 'btn btn-primary'}
+                style={{ flex: 1 }}
+              >
+                {updatingAccountId ? (
+                  <>
+                    <Loader2 size={15} className="animate-pulse" />
+                    <span>
+                      {pendingStatusChange.targetStatus === 'Frozen' ? 'Freezing...' : 'Unfreezing...'}
+                    </span>
+                  </>
+                ) : (
+                  <span>
+                    {pendingStatusChange.targetStatus === 'Frozen' ? 'Freeze Account' : 'Unfreeze Account'}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Admin Footer */}
       <footer

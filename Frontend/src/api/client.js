@@ -167,6 +167,18 @@ export const accountsApi = {
     request('/accounts/admin/dashboard', {
       method: 'GET',
     }),
+
+  /**
+   * Update a customer account status (Active <-> Frozen)
+   * PATCH /api/accounts/admin/:accountId/status
+   * @param {string} accountId
+   * @param {'Active'|'Frozen'} status
+   */
+  updateAccountStatus: (accountId, status) =>
+    request(`/accounts/admin/${accountId}/status`, {
+      method: 'PATCH',
+      body: { status },
+    }),
 };
 
 // ----------------------------------------------------
