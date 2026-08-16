@@ -1,75 +1,110 @@
-const userModel=require('../models/user.model')
-const jwt=require('jsonwebtoken')
-const tokenBlacklistModel=require('../models/blacklist.model')
+const userModel = require('../models/user.model')
+const jwt = require('jsonwebtoken')
+const tokenBlacklistModel = require('../models/blacklist.model')
 
-async function authMiddleware(req,res,next){
-    const token=req.cookies.token || req.headers.authorization?.split(" ")[1]
+async function authMiddleware(req, res, next) {
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1]
 
-    if(!token){
+    if (!token) {
         return res.status(401).json({
-            message:"Unauthorized access"
+            message: "Unauthorized access"
         })
     }
-    const isBlacklisted=await tokenBlacklistModel.findOne({ token })
+    const isBlacklisted = await tokenBlacklistModel.findOne({ token })
 
-    if(isBlacklisted){
+    if (isBlacklisted) {
         return res.status(401).json({
-            message:"Unauthorized acccess,token is invalid"
+            message: "Unauthorized acccess,token is invalid"
         })
     }
 
-    try{
-        const decoded=jwt.verify(token,process.env.JWT_SECRET)
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-        const user=await userModel.findById(decoded.userId)
+        const user = await userModel.findById(decoded.userId)
 
-        req.user=user
+        req.user = user
 
         return next()
 
-    }catch(err){
+    } catch (err) {
         console.error(err)
         return res.status(401).json({
-            message:"Unauthorized access"
+            message: "Unauthorized access"
         })
     }
 }
 
-async function authsystemuserMiddleware(req,res,next){
-    const token=req.cookies.token || req.headers.authorization?.split(" ")[1]
+async function authsystemuserMiddleware(req, res, next) {
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1]
 
-    if(!token){
+    if (!token) {
         return res.status(401).json({
-            message:"Unauthorized access"
+            message: "Unauthorized access"
         })
     }
-    const isBlacklisted=await tokenBlacklistModel.findOne({ token })
+    const isBlacklisted = await tokenBlacklistModel.findOne({ token })
 
-    if(isBlacklisted){
+    if (isBlacklisted) {
         return res.status(401).json({
-            message:"Unauthorized acccess,token is invalid"
+            message: "Unauthorized acccess,token is invalid"
         })
     }
-    try{
-        const decoded=jwt.verify(token,process.env.JWT_SECRET)
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-        const user=await userModel.findById(decoded.userId).select("+systemUser")
-        if(!user.systemUser){
+        const user = await userModel.findById(decoded.userId).select("+systemUser")
+        if (!user.systemUser) {
             return res.status(403).json({
-                message:"Forbidden access"
+                message: "Forbidden access"
             })
         }
-        req.user=user
+        req.user = user
 
         return next()
 
-    }catch(err){
+    } catch (err) {
         console.error(err)
         return res.status(401).json({
-            message:"Unauthorized access"
+            message: "Unauthorized access"
         })
     }
 
 }
 
-module.exports={authMiddleware,authsystemuserMiddleware}
+async function adminDashboardMiddleware(req, res, next) {
+    const token = req.cookies.adminToken || req.headers.authorization?.split(" ")[1]
+    if (!token) {
+        return res.status(401).json({
+            message: "Unauthorized access"
+        })
+    }
+    const isBlacklisted = await tokenBlacklistModel.findOne({ token })
+
+    if (isBlacklisted) {
+        return res.status(401).json({
+            message: "Unauthorized access, token is invalid"
+        })
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const user = await userModel
+            .findById(decoded.userId)
+            .select("+systemUser");
+
+        if (!user || user.systemUser !== true) {
+            return res.status(403).json({
+                message: "Forbidden access"
+            });
+        }
+        req.user = user
+        return next()
+    } catch (err) {
+        console.error(err)
+        return res.status(401).json({
+            message: "Unauthorized access"
+        })
+    }
+}
+module.exports = { authMiddleware, authsystemuserMiddleware, adminDashboardMiddleware }

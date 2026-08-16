@@ -148,13 +148,13 @@ async function adminLoginController(req, res) {
             message: "Email/Password is invalid"
         })
     }
-    const token = jwt.sign(
+    const adminToken = jwt.sign(
         { userId: user._id },
         process.env.JWT_SECRET,
         { expiresIn: "3d" }
     )
 
-    res.cookie("token", token, {
+    res.cookie("adminToken", adminToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",

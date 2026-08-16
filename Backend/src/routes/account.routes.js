@@ -28,6 +28,8 @@ router.get('/search',authMiddleware.authMiddleware,accountController.searchAccou
  */
 router.get('/balance/:accountId',authMiddleware.authMiddleware,accountController.getAccountBalance)
 
-router.get('/admin/dashboard', authMiddleware.authMiddleware , accountController.getAllAccounts)
+router.get('/admin/dashboard', authMiddleware.adminDashboardMiddleware , accountController.getAllAccounts)
+
+router.patch('/admin/:accountId/status' , authMiddleware.adminDashboardMiddleware , accountController.changeAccountStatus)
 
 module.exports=router

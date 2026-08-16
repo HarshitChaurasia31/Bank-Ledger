@@ -150,4 +150,39 @@ async function getAllAccounts(req , res) {
         accounts
     })
 }
-module.exports = { createAccountController, getUserAccountController, getAccountBalance, searchAccounts , getAllAccounts}
+
+async function changeAccountStatus(req, res) {
+    const { accountId } = req.params;
+    const { status } = req.body;
+
+    const account = await accountModel.findOne({
+        _id: accountId
+    });
+
+    if (!account) {
+        return res.status(404).json({
+            message: "Account not found"
+        });
+    }
+
+    if (status !== "Active" && status !== "Frozen") {
+        return res.status(400).json({
+            message: "Invalid status"
+        });
+    }
+
+    if (account._id.toString() === process.env.SYSTEM_ACCOUNT_ID) {
+        return res.status(403).json({
+            message: "Changes not allowed"
+        });
+    }
+
+    account.status = status;
+    await account.save();
+
+    return res.status(200).json({
+        message: "Status changed",
+        account
+    });
+}
+module.exports = { createAccountController, getUserAccountController, getAccountBalance, searchAccounts , getAllAccounts , changeAccountStatus}
