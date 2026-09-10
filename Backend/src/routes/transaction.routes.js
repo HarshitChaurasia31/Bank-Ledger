@@ -2,7 +2,7 @@ const express=require('express')
 const authMiddleware=require('../middleware/auth.middleware')
 const transactionController=require('../controller/transaction.controller')
 const router=express.Router()
-const {transactionLimiter}=require('../middleware/ratelimit.middleware')
+const {transactionLimiter}=require('../middleware/rateLimit.middleware')
 
 /**
  * - POST /api/transactions
