@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Shield, Mail, Lock, ArrowRight, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { authApi, ApiError } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { validateEmail } from '../utils/validation';
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
@@ -10,14 +11,52 @@ export function AdminLoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [generalError, setGeneralError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (emailError) setEmailError('');
+    if (generalError) setGeneralError('');
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (passwordError) setPasswordError('');
+    if (generalError) setGeneralError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (rateLimitCooldown > 0) return;
+    if (rateLimitCooldown > 0 || isSubmitting) return;
 
-    setError('');
+    setEmailError('');
+    setPasswordError('');
+    setGeneralError('');
+
+    let hasValidationError = false;
+
+    // 1. Email validation
+    const emailResult = validateEmail(email);
+    if (!emailResult.isValid) {
+      setEmailError(emailResult.error);
+      hasValidationError = true;
+    }
+
+    // 2. Password check
+    if (!password) {
+      setPasswordError('Password is required.');
+      hasValidationError = true;
+    }
+
+    if (hasValidationError) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -31,16 +70,16 @@ export function AdminLoginPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401) {
-          setError('Invalid email or password.');
+          setGeneralError('Invalid email or password.');
         } else if (err.status === 403) {
-          setError('Only admin users can access this area.');
+          setGeneralError('Only admin users can access this area.');
         } else if (err.status === 429) {
-          setError('Too many authentication attempts. Please wait for the cooldown to expire.');
+          setGeneralError('Too many authentication attempts. Please wait for the cooldown to expire.');
         } else {
-          setError('Unable to sign in. Please try again later.');
+          setGeneralError('Unable to sign in. Please try again later.');
         }
       } else {
-        setError('Unable to sign in. Please try again later.');
+        setGeneralError('Unable to sign in. Please try again later.');
       }
     } finally {
       setIsSubmitting(false);
@@ -116,45 +155,100 @@ export function AdminLoginPage() {
         </div>
 
         {/* Error Alert */}
-        {error && (
+        {generalError && (
           <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <AlertCircle size={16} style={{ flexShrink: 0 }} />
-            <span>{error}</span>
+            <span>{generalError}</span>
           </div>
         )}
 
         {/* Admin Login Form */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label className="form-label">Administrator Email</label>
+            <label className="form-label" htmlFor="admin-email">Administrator Email</label>
             <div className="input-with-icon">
               <Mail size={16} className="input-icon" />
               <input
+                id="admin-email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 placeholder="admin@lenadena.bank"
                 className="form-control"
-                required
                 autoComplete="email"
+                style={emailError ? { borderColor: 'var(--danger)' } : {}}
               />
             </div>
+            {emailError && (
+              <div
+                style={{
+                  color: 'var(--danger)',
+                  fontSize: '12px',
+                  marginTop: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <AlertCircle size={13} style={{ flexShrink: 0 }} />
+                <span>{emailError}</span>
+              </div>
+            )}
           </div>
 
           <div className="form-group" style={{ marginBottom: '24px' }}>
-            <label className="form-label">Master Password</label>
-            <div className="input-with-icon">
+            <label className="form-label" htmlFor="admin-password">Master Password</label>
+            <div className="input-with-icon" style={{ position: 'relative' }}>
               <Lock size={16} className="input-icon" />
               <input
-                type="password"
+                id="admin-password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 placeholder="••••••••"
                 className="form-control"
-                required
                 autoComplete="current-password"
+                style={{
+                  paddingRight: '40px',
+                  ...(passwordError ? { borderColor: 'var(--danger)' } : {}),
+                }}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 0,
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
+            {passwordError && (
+              <div
+                style={{
+                  color: 'var(--danger)',
+                  fontSize: '12px',
+                  marginTop: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <AlertCircle size={13} style={{ flexShrink: 0 }} />
+                <span>{passwordError}</span>
+              </div>
+            )}
           </div>
 
           <button

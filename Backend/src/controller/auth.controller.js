@@ -10,7 +10,34 @@ async function userRegisterController(req, res) {
     try {
         const { email, name, password } = req.body
 
-        const isExits = await userModel.findOne({ email })
+        if (!name || typeof name !== 'string' || !name.trim()) {
+            return res.status(400).json({
+                message: "Name is required"
+            })
+        }
+
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!email || typeof email !== 'string' || !emailRegex.test(email.trim())) {
+            return res.status(400).json({
+                message: "Please provide a valid email address"
+            })
+        }
+
+        const isStrongPassword =
+            typeof password === 'string' &&
+            password.length >= 8 &&
+            /[A-Z]/.test(password) &&
+            /[a-z]/.test(password) &&
+            /[0-9]/.test(password) &&
+            /[^A-Za-z0-9]/.test(password);
+
+        if (!isStrongPassword) {
+            return res.status(400).json({
+                message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+            })
+        }
+
+        const isExits = await userModel.findOne({ email: email.trim().toLowerCase() })
 
         if (isExits) {
             return res.status(422).json({
@@ -20,9 +47,9 @@ async function userRegisterController(req, res) {
         }
 
         const user = await userModel.create({
-            email,
+            email: email.trim().toLowerCase(),
             password,
-            name
+            name: name.trim()
         })
 
         const token = jwt.sign(
